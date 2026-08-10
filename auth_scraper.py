@@ -4,29 +4,31 @@ import json
 import os
 import re
 
+AUTH_FILE = "auth.json"
+
 
 def get_session_credentials():
+    if os.path.isfile(AUTH_FILE):
+        return
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
 
-        if not os.path.isfile("auth.json"):
-            context = browser.new_context()
-            page = context.new_page()
+        context = browser.new_context()
+        page = context.new_page()
 
-            page.goto("https://connectcarolina.unc.edu/")
-            input("login to connect carolina then press enter...")
+        page.goto("https://connectcarolina.unc.edu/")
+        input("login to connect carolina then press enter...")
 
-            path = "auth.json"
-
-            context.storage_state(path=path)
-            print(f"made file {path}")
+        context.storage_state(path=AUTH_FILE)
+        print(f"made file {AUTH_FILE}")
 
         browser.close()
 
 
 def get_json(subject, term="2269"):
-    if not os.path.isfile("auth.json"):
-        raise FileNotFoundError("could not find auth.json file")
+    if not os.path.isfile(AUTH_FILE):
+        raise FileNotFoundError(f"could not find {AUTH_FILE} file")
 
     all_results = []
 
@@ -34,11 +36,10 @@ def get_json(subject, term="2269"):
         "WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearch"
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context(storage_state="auth.json")
+        request_context = p.request.new_context(storage_state=AUTH_FILE)
 
         def fetch_page(page):
-            response = context.request.get(
+            response = request_context.get(
                 API_URL,
                 params={
                     "institution": "UNCCH",
@@ -69,7 +70,7 @@ def get_json(subject, term="2269"):
             data = fetch_page(page)
             all_results.extend(data["classes"])
 
-        browser.close()
+        request_context.dispose()
 
     return all_results
 
@@ -96,6 +97,29 @@ def split_day(value):
 
     parts = re.findall(r"[A-Z][^A-Z]*", value)
     return parts
+
+
+def normalize_building_name(value, room=None, building_code=None):
+    if not value:
+        return None
+
+    value = value.strip()
+
+    if value == "TBA":
+        return value
+
+    # Safely remove the known room from the end.
+    if room:
+        room_suffix = f"-Rm {room}"
+        if value.endswith(room_suffix):
+            return value[:-len(room_suffix)].strip()
+
+    # Fallback when a separate room value is unavailable.
+    building, separator, _ = value.rpartition("-Rm ")
+    if separator:
+        return building.strip()
+
+    return value
 
 
 def normalize_class(data):
