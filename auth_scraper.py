@@ -1,5 +1,7 @@
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import sync_playwright
+import json
 import os
+import re
 
 
 def get_session_credentials():
@@ -64,13 +66,122 @@ def get_json(subject, term="2269"):
 
         for page in range(2, page_count + 1):
             data = fetch_page(page)
-            all_results.append(data["classes"])
+            all_results.extend(data["classes"])
 
         browser.close()
 
     return all_results
 
 
+def normalize_class_time(value):
+    if not value:
+        return None
+
+    parts = value.split(".")
+    return f"{parts[0]}:{parts[1]}"
+
+
+def split_day(value):
+    if not value:
+        return None
+
+    parts = re.findall(r"[A-Z][^A-Z]*", value)
+    return parts
+
+
+def normalize_class(data):
+    return {
+        "class_number": data["class_nbr"],
+        "course_id": data["crse_id"],
+
+        "term": data["strm"],
+
+        "subject": data["subject"],
+        "course_number": data["catalog_nbr"],
+        "section": data["class_section"],
+
+        "title": data["descr"],
+        "credits": float(data["units"]),
+
+        "component": data["component"],
+        "section_type": data["section_type"],
+
+        "instruction_mode": data["instruction_mode_descr"],
+
+        "status": data["enrl_stat_descr"].lower(),
+
+        "capacity": data["class_capacity"],
+        "enrolled": data["enrollment_total"],
+        "available_seats": data["enrollment_available"],
+
+        "waitlist_capacity": data["wait_cap"],
+        "waitlist_total": data["wait_tot"],
+
+        "instructors": [
+            {
+                "name": instructor["name"],
+                "email": instructor.get("email") or None,
+            }
+            for instructor in data.get("instructors", [])
+        ],
+
+        "meetings": [
+            {
+                "days": split_day(meeting.get("days")),
+                "start_time": normalize_class_time(
+                    meeting.get("start_time")
+                ),
+                "end_time": normalize_class_time(
+                    meeting.get("end_time")
+                ),
+
+                "building_code": meeting.get("bldg_cd"),
+                "building": meeting.get("facility_descr"),
+                "room": meeting.get("room"),
+                "facility_id": meeting.get("facility_id"),
+            }
+            for meeting in data.get("meetings", [])
+        ],
+
+        "attributes": [
+            x for
+            x in data.get("crse_attr", "").split(",")
+            if x
+        ],
+
+        "attribute_values": [
+            x for
+            x in data.get("crse_attr_value", "").split(",")
+            if x
+        ],
+
+        "reserved_capacities": [
+            {
+                "number": reserve["rsrv_cap_nbr"],
+                "description": reserve["descr"],
+                "start": reserve.get("start_dt"),
+                "capacity": reserve["enrl_cap"],
+                "enrolled": reserve["enrl_tot"],
+            }
+            for reserve in data.get("reserve_caps", [])
+        ]
+    }
+
+
 if __name__ == "__main__":
+    subject = "COMP"
+
     get_session_credentials()
-    get_json("COMP")
+    raw_classes = get_json(subject)
+    classes = [
+        normalize_class(cls)
+        for cls in raw_classes
+    ]
+
+    file_path = f"{subject}_data.json"
+    output_directory = "scraped_data"
+    os.makedirs(output_directory, exist_ok=True)
+    path = os.path.join(output_directory, file_path)
+
+    with open(path, "w") as file:
+        json.dump(classes, file, indent=2)

@@ -29,19 +29,67 @@ On the first run, a browser window opens at ConnectCarolina. Log in, return to
 the terminal, and press Enter. The scraper saves the browser session to
 `auth.json` and reuses it on later runs.
 
+The default run fetches `COMP` classes for term `2269`, normalizes the
+ConnectCarolina response, and writes it to
+`scraped_data/COMP_data.json`. The output directory is created automatically.
+Change `subject` or pass a different term to `get_json` to scrape another
+search.
+
 If ConnectCarolina returns a non-JSON response, the saved session has probably
 expired. Remove `auth.json` and run the scraper again to log in and create a
 new session.
 
 ```python
-from auth_scraper import get_session_credentials, get_json
+from auth_scraper import get_json, get_session_credentials, normalize_class
 
 get_session_credentials()
-courses = get_json("COMP", term="2269")
+raw_classes = get_json("COMP", term="2269")
+classes = [normalize_class(cls) for cls in raw_classes]
 ```
 
-`get_json` returns the course data from ConnectCarolina as a list of
-JSON-compatible dictionaries.
+The authenticated scraper's output has this general structure:
+
+```json
+{
+  "class_number": "12345",
+  "course_id": "012345",
+  "term": "2269",
+  "subject": "COMP",
+  "course_number": "110",
+  "section": "001",
+  "title": "Introduction to Programming",
+  "credits": 3.0,
+  "component": "LEC",
+  "section_type": "Class Section",
+  "instruction_mode": "In Person",
+  "status": "open",
+  "capacity": 24,
+  "enrolled": 20,
+  "available_seats": 4,
+  "waitlist_capacity": 5,
+  "waitlist_total": 0,
+  "instructors": [
+    {
+      "name": "Instructor Name",
+      "email": "instructor@unc.edu"
+    }
+  ],
+  "meetings": [
+    {
+      "days": ["Mo", "We", "Fr"],
+      "start_time": "10:10",
+      "end_time": "11:00",
+      "building_code": "FB",
+      "building": "Example Building",
+      "room": "101",
+      "facility_id": "FB-0101"
+    }
+  ],
+  "attributes": [],
+  "attribute_values": [],
+  "reserved_capacities": []
+}
+```
 
 ### Public scraper (fallback)
 
@@ -59,23 +107,25 @@ It fetches `COMP` courses for Fall 2026 and writes them to
 The public scraper's JSON has this structure:
 
 ```json
-"subject": "COMP",
-"catalog_number": "89",
-"same_as": "",
-"section": "144",
-"crn": "18801",
-"description": "Fys: Special Topics",
-"term": "2026 Fall",
-"credit_hours": "3.0",
-"meeting_dates": {
+{
+  "subject": "COMP",
+  "catalog_number": "89",
+  "same_as": "",
+  "section": "144",
+  "crn": "18801",
+  "description": "Fys: Special Topics",
+  "term": "2026 Fall",
+  "credit_hours": "3.0",
+  "meeting_dates": {
     "start": "2026-08-17",
     "end": "2026-12-11"
-},
-"instruction_type": "In Person On Campus Learners",
-"available_seats": "0",
-"meeting_days": "TTH",
-"start_time": "12:30 PM",
-"end_time": "01:45 PM"
+  },
+  "instruction_type": "In Person On Campus Learners",
+  "available_seats": "0",
+  "meeting_days": "TTH",
+  "start_time": "12:30 PM",
+  "end_time": "01:45 PM"
+}
 ```
 
 ## License

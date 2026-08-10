@@ -221,3 +221,5 @@ __marimo__/
 
 # credentials data from auth_scraper
 auth.json
+
+scraped_data
