@@ -1,8 +1,10 @@
 # UNC Course Scraper
 
-Simple Python scraper that collects UNC course and section data from the
-[UNC Class Search](https://reports.unc.edu/class-search/) website and saves it
-as JSON.
+Python scrapers for collecting UNC course and section data. The default,
+`auth_scraper.py`, uses an authenticated ConnectCarolina session. The older
+`public_scraper.py` uses the public
+[UNC Class Search](https://reports.unc.edu/class-search/) website and is kept
+only as a fallback if the authenticated scraper is not working.
 
 ## Setup
 
@@ -10,21 +12,51 @@ as JSON.
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+playwright install chromium
 ```
 
 ## Usage
 
-Run the scraper with:
+### Authenticated scraper (default)
+
+Run:
+
+```bash
+python auth_scraper.py
+```
+
+On the first run, a browser window opens at ConnectCarolina. Log in, return to
+the terminal, and press Enter. The scraper saves the browser session to
+`auth.json` and reuses it on later runs.
+
+If ConnectCarolina returns a non-JSON response, the saved session has probably
+expired. Remove `auth.json` and run the scraper again to log in and create a
+new session.
+
+```python
+from auth_scraper import get_session_credentials, get_json
+
+get_session_credentials()
+courses = get_json("COMP", term="2269")
+```
+
+`get_json` returns the course data from ConnectCarolina as a list of
+JSON-compatible dictionaries.
+
+### Public scraper (fallback)
+
+The public scraper should not normally be needed. Use it only if the
+authenticated scraper is unavailable or not working:
 
 ```bash
 python public_scraper.py
 ```
 
-The current script fetches `COMP` courses for Fall 2026 and writes them to
+It fetches `COMP` courses for Fall 2026 and writes them to
 `COMP_courses.json`. Change the subject and term values in
 `public_scraper.py` to scrape a different search.
 
-currently the JSON has this structure
+The public scraper's JSON has this structure:
 
 ```json
 "subject": "COMP",
