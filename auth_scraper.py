@@ -1,4 +1,5 @@
 from playwright.sync_api import sync_playwright
+from datetime import datetime
 import json
 import os
 import re
@@ -81,6 +82,14 @@ def normalize_class_time(value):
     return f"{parts[0]}:{parts[1]}"
 
 
+def normalize_class_date(value):
+    if not value:
+        return None
+    date = datetime.strptime(value, "%m/%d/%Y")
+    formatted_date = date.strftime("%Y-%m-%d")
+    return formatted_date
+
+
 def split_day(value):
     if not value:
         return None
@@ -159,7 +168,7 @@ def normalize_class(data):
             {
                 "number": reserve["rsrv_cap_nbr"],
                 "description": reserve["descr"],
-                "start": reserve.get("start_dt"),
+                "start": normalize_class_date(reserve.get("start_dt")),
                 "capacity": reserve["enrl_cap"],
                 "enrolled": reserve["enrl_tot"],
             }
