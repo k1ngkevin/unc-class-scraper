@@ -5,6 +5,8 @@ import os
 import re
 
 AUTH_FILE = "auth.json"
+API_URL = "https://cs.cc.unc.edu/psc/campus/EMPLOYEE/SA/s/" \
+    "WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearch"
 
 
 def get_session_credentials():
@@ -26,51 +28,44 @@ def get_session_credentials():
         browser.close()
 
 
-def get_json(subject, term="2269"):
+def get_json(request_context, subject, term="2269"):
     if not os.path.isfile(AUTH_FILE):
         raise FileNotFoundError(f"could not find {AUTH_FILE} file")
 
     all_results = []
 
-    API_URL = "https://cs.cc.unc.edu/psc/campus/EMPLOYEE/SA/s/" \
-        "WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearch"
+    def fetch_page(page):
+        response = request_context.get(
+            API_URL,
+            params={
+                "institution": "UNCCH",
+                "term": term,
+                "subject": subject,
+                "x_acad_career": "UGRD",
+                "enrl_stat": "",
+                "crse_attr": "",
+                "crse_attr_value": "",
+                "page": page,
+            }
+        )
 
-    with sync_playwright() as p:
-        request_context = p.request.new_context(storage_state=AUTH_FILE)
+        content_type = response.headers.get("content-type", "")
 
-        def fetch_page(page):
-            response = request_context.get(
-                API_URL,
-                params={
-                    "institution": "UNCCH",
-                    "term": term,
-                    "subject": subject,
-                    "x_acad_career": "UGRD",
-                    "enrl_stat": "",
-                    "crse_attr": "",
-                    "crse_attr_value": "",
-                    "page": page,
-                }
+        if "application/json" not in content_type:
+            raise RuntimeError(
+                "ConnectCarolina session is probably expired. "
+                f"Received {content_type} instead of JSON."
             )
 
-            content_type = response.headers.get("content-type", "")
+        return response.json()
 
-            if "application/json" not in content_type:
-                raise RuntimeError(
-                    "ConnectCarolina session is probably expired. "
-                    f"Received {content_type} instead of JSON."
-                )
-            return response.json()
+    first_page = fetch_page(1)
+    all_results.extend(first_page["classes"])
+    page_count = first_page["pageCount"]
 
-        first_page = fetch_page(1)
-        all_results.extend(first_page["classes"])
-        page_count = first_page["pageCount"]
-
-        for page in range(2, page_count + 1):
-            data = fetch_page(page)
-            all_results.extend(data["classes"])
-
-        request_context.dispose()
+    for page in range(2, page_count + 1):
+        data = fetch_page(page)
+        all_results.extend(data["classes"])
 
     return all_results
 
@@ -223,7 +218,15 @@ if __name__ == "__main__":
     subject = "COMP"
 
     get_session_credentials()
-    raw_classes = get_json(subject)
+
+    with sync_playwright() as p:
+        request_context = p.request.new_context(storage_state=AUTH_FILE)
+
+        try:
+            raw_classes = get_json(request_context, subject)
+        finally:
+            request_context.dispose()
+
     classes = [
         normalize_class(cls)
         for cls in raw_classes
@@ -234,5 +237,5 @@ if __name__ == "__main__":
     os.makedirs(output_directory, exist_ok=True)
     path = os.path.join(output_directory, file_path)
 
-    with open(path, "w") as file:
+    with open(path, "w", encoding="utf-8") as file:
         json.dump(classes, file, indent=2)
