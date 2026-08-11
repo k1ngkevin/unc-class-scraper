@@ -120,6 +120,25 @@ def normalize_building_name(value, room=None):
     return value
 
 
+def get_min_credits(value):
+    if not value:
+        return None
+
+    min_credits = value.strip().split("-")[0]
+    return min_credits
+
+
+def get_max_credits(value):
+    if not value:
+        return None
+
+    max_credits = value.strip().split("-")
+    if len(max_credits) > 1:
+        return max_credits[1]
+
+    return max_credits[0]
+
+
 def normalize_class(data):
     return {
         "class_number": data["class_nbr"],
@@ -132,7 +151,8 @@ def normalize_class(data):
         "section": data["class_section"],
 
         "title": data["descr"],
-        "credits": data["units"],
+        "min_credits": get_min_credits(data["units"]),
+        "max_credits": get_max_credits(data["units"]),
 
         "component": data["component"],
         "section_type": data["section_type"],

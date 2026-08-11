@@ -25,7 +25,8 @@ def save_course(cls):
         "subject": cls["subject"],
         "course_number": cls["course_number"],
         "title": cls["title"],
-        "credits": cls["credits"],
+        "min_credits": cls["min_credits"],
+        "max_credits": cls["max_credits"],
         "term": cls["term"],
     }
 
@@ -197,9 +198,10 @@ if __name__ == "__main__":
     #    "HBEH", "INLS", "LING", "MATH", "MEJO", "NSCI", "PHIL", "PHYS", "PLAN",
     #    "PLCY", "POLI", "PSYC", "SOCI", "STOR", "WGST",
     # ]
+
     start = time.time()
     get_session_credentials()
-    subjects = ["AAAD", "AMST", "ANTH", "APPL"]
+    subjects = ["COMP", "AAAD", "AMST", "ANTH", "APPL"]
     for subject in subjects:
         raw_classes = get_json(subject)
         classes = [normalize_class(cls) for cls in raw_classes]
@@ -207,4 +209,4 @@ if __name__ == "__main__":
         for cls in classes:
             save_class(cls)
     end = time.time()
-    print(f"time took {start-end}")
+    print(f"time took {end-start} seconds")
