@@ -7,6 +7,7 @@ from auth_scraper import (
     get_session_credentials,
     normalize_class
 )
+from subjects import load_subjects
 
 load_dotenv()
 
@@ -249,24 +250,14 @@ def save_classes_batch(classes):
     instructor_ids = save_instructors_batch(classes)
     save_instructor_links_batch(classes, section_ids, instructor_ids)
 
-    # SUBJECTS = [
-    #    "AAAD", "AMST", "ANTH", "APPL", "ASTR", "BCB", "BIOC", "BIOL", "BIOS",
-    #    "BMME", "BUSI", "CHEM", "CLAR", "CMPL", "COMM", "COMP", "DATA", "DRAM",
-    #    "ECON", "EDUC", "EMES", "ENEC", "ENGL", "ENVR", "EPID", "EXSS", "GEOG",
-    #    "HBEH", "INLS", "LING", "MATH", "MEJO", "NSCI", "PHIL", "PHYS", "PLAN",
-    #    "PLCY", "POLI", "PSYC", "SOCI", "STOR", "WGST",
-    # ]
-
 
 if __name__ == "__main__":
-    SUBJECTS = [
-        "COMP"
-    ]
+    subjects = load_subjects()
 
     total_start = time.perf_counter()
 
     get_session_credentials()
-    for subject in SUBJECTS:
+    for subject in subjects:
         subject_start = time.perf_counter()
         start = time.perf_counter()
         raw_classes = get_json(subject)

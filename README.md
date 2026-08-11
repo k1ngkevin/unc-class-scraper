@@ -6,6 +6,9 @@ Python scrapers for collecting UNC course and section data. The default,
 [UNC Class Search](https://reports.unc.edu/class-search/) website and is kept
 only as a fallback if the authenticated scraper is not working.
 
+`subjects.py` fetches all the courses from [UNC Catalog](https://catalog.unc.edu/courses/)
+and saves the subjects into `subjects.json`
+
 ## Setup
 
 ```bash
