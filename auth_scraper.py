@@ -99,7 +99,7 @@ def split_day(value):
     return parts
 
 
-def normalize_building_name(value, room=None, building_code=None):
+def normalize_building_name(value, room=None):
     if not value:
         return None
 
@@ -108,13 +108,11 @@ def normalize_building_name(value, room=None, building_code=None):
     if value == "TBA":
         return value
 
-    # Safely remove the known room from the end.
     if room:
         room_suffix = f"-Rm {room}"
         if value.endswith(room_suffix):
             return value[:-len(room_suffix)].strip()
 
-    # Fallback when a separate room value is unavailable.
     building, separator, _ = value.rpartition("-Rm ")
     if separator:
         return building.strip()
@@ -134,7 +132,7 @@ def normalize_class(data):
         "section": data["class_section"],
 
         "title": data["descr"],
-        "credits": float(data["units"]),
+        "credits": data["units"],
 
         "component": data["component"],
         "section_type": data["section_type"],
@@ -169,7 +167,7 @@ def normalize_class(data):
                 ),
 
                 "building_code": meeting.get("bldg_cd"),
-                "building": meeting.get("facility_descr"),
+                "building": normalize_building_name(meeting.get("facility_descr"), meeting.get("room")),
                 "room": meeting.get("room"),
                 "facility_id": meeting.get("facility_id"),
             }
