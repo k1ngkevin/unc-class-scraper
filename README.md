@@ -91,6 +91,10 @@ The authenticated scraper's output has this general structure:
 }
 ```
 
+### Database
+
+`supabase_client.py` handles saving scraped course data to the Supabase database.
+
 ### Public scraper (fallback)
 
 The public scraper should not normally be needed. Use it only if the
