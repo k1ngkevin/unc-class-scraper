@@ -3,11 +3,8 @@ from datetime import datetime
 import json
 import os
 import re
-<<<<<<< Updated upstream
-=======
 from subjects import load_subjects
 from supabase_client import save_file_to_db
->>>>>>> Stashed changes
 
 AUTH_FILE = "auth.json"
 API_URL = "https://cs.cc.unc.edu/psc/campus/EMPLOYEE/SA/s/" \
@@ -220,7 +217,9 @@ def normalize_class(data):
 
 
 if __name__ == "__main__":
-    subject = "COMP"
+    term = "2269"
+    subjects = load_subjects()
+    raw_classes = []
 
     get_session_credentials()
 
@@ -228,7 +227,8 @@ if __name__ == "__main__":
         request_context = p.request.new_context(storage_state=AUTH_FILE)
 
         try:
-            raw_classes = get_json(request_context, subject)
+            for subject in subjects:
+                raw_classes.extend(get_json(request_context, subject))
         finally:
             request_context.dispose()
 
@@ -237,7 +237,7 @@ if __name__ == "__main__":
         for cls in raw_classes
     ]
 
-    file_path = f"{subject}_data.json"
+    file_path = f"{term}.json"
     output_directory = "scraped_data"
     os.makedirs(output_directory, exist_ok=True)
     path = os.path.join(output_directory, file_path)
