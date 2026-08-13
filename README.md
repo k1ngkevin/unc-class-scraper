@@ -32,11 +32,9 @@ On the first run, a browser window opens at ConnectCarolina. Log in, return to
 the terminal, and press Enter. The scraper saves the browser session to
 `auth.json` and reuses it on later runs.
 
-The default run fetches `COMP` classes for term `2269`, normalizes the
+The default run fetches classes for term `2269`, normalizes them
 ConnectCarolina response, and writes it to
-`scraped_data/COMP_data.json`. The output directory is created automatically.
-Change `subject` or pass a different term to `get_json` to scrape another
-search.
+`scraped_data/2269.json`. The output directory is created automatically.
 
 If ConnectCarolina returns a non-JSON response, the saved session has probably
 expired. Remove `auth.json` and run the scraper again to log in and create a
