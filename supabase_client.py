@@ -3,12 +3,6 @@ import os
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from supabase import Client, create_client
-from auth_scraper import (
-    AUTH_FILE,
-    get_json,
-    get_session_credentials,
-    normalize_class
-)
 from subjects import load_subjects
 
 load_dotenv()
@@ -253,28 +247,16 @@ def save_classes_batch(classes):
     save_instructor_links_batch(classes, section_ids, instructor_ids)
 
 
-if __name__ == "__main__":
-    subjects = load_subjects()
+def save_file_to_db(file_path):
+    if not file_path:
+        return
 
-    total_start = time.perf_counter()
-
-    get_session_credentials()
-
-    with sync_playwright() as p:
-        request_context = p.request.new_context(storage_state=AUTH_FILE)
-
-        try:
-            for subject in subjects:
-                subject_start = time.perf_counter()
-                raw_classes = get_json(request_context, subject)
-
-                classes = [normalize_class(cls) for cls in raw_classes]
-                save_classes_batch(classes)
-
-                elapsed = time.perf_counter() - subject_start
-                print(f" {subject} took {elapsed:.2f} seconds")
-        finally:
-            request_context.dispose()
-
-    total_elapsed = time.perf_counter() - total_start
-    print(f"Total time: {total_elapsed:.2f} seconds")
+    with open(file_path, "rb") as file:
+        supabase.storage.from_("course-data").upload(
+            path=file_path,
+            file=file,
+            file_options={
+                "content-type": "application/json",
+                "upsert": "true"
+            }
+        )

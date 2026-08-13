@@ -3,6 +3,11 @@ from datetime import datetime
 import json
 import os
 import re
+<<<<<<< Updated upstream
+=======
+from subjects import load_subjects
+from supabase_client import save_file_to_db
+>>>>>>> Stashed changes
 
 AUTH_FILE = "auth.json"
 API_URL = "https://cs.cc.unc.edu/psc/campus/EMPLOYEE/SA/s/" \
@@ -239,3 +244,5 @@ if __name__ == "__main__":
 
     with open(path, "w", encoding="utf-8") as file:
         json.dump(classes, file, indent=2)
+
+    save_file_to_db(path)
