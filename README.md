@@ -46,7 +46,11 @@ new session.
 from auth_scraper import get_json, get_session_credentials, normalize_class
 
 get_session_credentials()
-raw_classes = get_json("COMP", term="2269")
+
+with sync_playwright() as p:
+  request_context = p.request.new_context(storage_state="auth.json")
+  raw_classes = get_json(request_context=request_context, subject="COMP")
+
 classes = [normalize_class(cls) for cls in raw_classes]
 ```
 

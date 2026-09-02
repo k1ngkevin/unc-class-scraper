@@ -1,10 +1,9 @@
 from playwright.sync_api import sync_playwright
 from datetime import datetime
-import json
 import os
 import re
+import json
 from subjects import load_subjects
-from supabase_client import save_file_to_db
 
 AUTH_FILE = "auth.json"
 API_URL = "https://cs.cc.unc.edu/psc/campus/EMPLOYEE/SA/s/" \
@@ -216,7 +215,9 @@ def normalize_class(data):
     }
 
 
+
 if __name__ == "__main__":
+    from supabase_client import save_file_to_db
     term = "2269"
     subjects = load_subjects()
     raw_classes = []

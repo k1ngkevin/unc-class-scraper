@@ -1,9 +1,6 @@
-import time
 import os
 from dotenv import load_dotenv
-from playwright.sync_api import sync_playwright
 from supabase import Client, create_client
-from subjects import load_subjects
 
 load_dotenv()
 
