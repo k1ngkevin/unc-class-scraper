@@ -268,9 +268,9 @@ if __name__ == "__main__":
     file_path = f"{term}.json"
     output_directory = "scraped_data"
     os.makedirs(output_directory, exist_ok=True)
-    path = os.path.join(output_directory, file_path)
+    class_data_path = os.path.join(output_directory, file_path)
 
-    with open(path, "w", encoding="utf-8") as file:
+    with open(class_data_path, "w", encoding="utf-8") as file:
         json.dump(classes, file, indent=2)
 
-    save_file_to_db(path)
+    save_file_to_db(class_data_path)
