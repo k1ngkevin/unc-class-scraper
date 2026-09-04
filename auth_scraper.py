@@ -94,7 +94,6 @@ def split_day(value):
     parts = re.findall(r"[A-Z][^A-Z]*", value)
     return parts
 
-
 def normalize_building_name(value, room=None):
     if not value:
         return None
@@ -107,12 +106,40 @@ def normalize_building_name(value, room=None):
     if room:
         room_suffix = f"-Rm {room}"
         if value.endswith(room_suffix):
-            return value[:-len(room_suffix)].strip()
+            value = value[:-len(room_suffix)].strip()
+
+    if value.endswith("-Rm"):
+        value = value.removesuffix("-Rm").strip()
 
     building, separator, _ = value.rpartition("-Rm ")
     if separator:
-        return building.strip()
+        value = building.strip()
 
+    if " " not in value:
+        return value
+
+    suffix = None
+    parts = value.rsplit(" ", 1)
+
+    match parts[-1].lower():
+        case "bui":
+            suffix ="Building"
+        case "cen":
+            suffix = "Center"
+        case "re":
+            suffix = "Research Center"
+        case "ha":
+            suffix = "Hall"
+        case "a":
+            suffix = "Art"
+        case "biomolecula":
+            suffix = "Biomolecular Research Bldg"
+
+    if suffix:
+        value = parts[0] + " " + suffix
+
+    value = value.split("(", 1)[0].rstrip()
+        
     return value
 
 
