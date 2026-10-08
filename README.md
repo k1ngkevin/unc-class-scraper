@@ -32,11 +32,12 @@ On the first run, a browser window opens at ConnectCarolina. Log in, return to
 the terminal, and press Enter. The scraper saves the browser session to
 `auth.json` and reuses it on later runs.
 
-The default run fetches `COMP` classes for term `2269`, normalizes the
-ConnectCarolina response, and writes it to
-`scraped_data/COMP_data.json`. The output directory is created automatically.
-Change `subject` or pass a different term to `get_json` to scrape another
-search.
+The default run fetches classes for all subjects returned by `load_subjects()`,
+using `TERM` in `auth_scraper.py`, and normalizes the ConnectCarolina response.
+It uploads JSON directly to `scraped_data/{TERM}.json` in the Supabase
+`course-data` storage bucket without creating a local course-data file.
+Repeated runs replace the stored file for that term. Change `TERM` to scrape
+another semester.
 
 If ConnectCarolina returns a non-JSON response, the saved session has probably
 expired. Remove `auth.json` and run the scraper again to log in and create a

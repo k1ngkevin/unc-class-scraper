@@ -42,8 +42,7 @@ def save_building_coords(output_directory="scraped_data"):
     building_data = get_building_coords()
 
     with open(building_data_path, "w", encoding="utf-8") as file:
-      json.dump(building_data, file, indent=2)
-
+        json.dump(building_data, file, indent=2)
 
 if __name__ == "__main__":
   save_building_coords()

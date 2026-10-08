@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 from supabase import Client, create_client
 
@@ -244,16 +245,13 @@ def save_classes_batch(classes):
     save_instructor_links_batch(classes, section_ids, instructor_ids)
 
 
-def save_file_to_db(file_path):
-    if not file_path:
-        return
-
-    with open(file_path, "rb") as file:
-        supabase.storage.from_("course-data").upload(
-            path=file_path,
-            file=file,
-            file_options={
-                "content-type": "application/json",
-                "upsert": "true"
-            }
-        )
+def save_json_to_storage(data, storage_path):
+    json_bytes = json.dumps(data, indent=2).encode("utf-8")
+    return supabase.storage.from_("course-data").upload(
+        path=storage_path,
+        file=json_bytes,
+        file_options={
+            "content-type": "application/json",
+            "upsert": "true"
+        }
+    )

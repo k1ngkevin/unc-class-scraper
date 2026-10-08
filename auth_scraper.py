@@ -1,13 +1,24 @@
 from playwright.sync_api import sync_playwright
 from datetime import datetime
+from tqdm import tqdm
 import os
 import re
-import json
 from subjects import load_subjects
 
 AUTH_FILE = "auth.json"
 API_URL = "https://cs.cc.unc.edu/psc/campus/EMPLOYEE/SA/s/" \
     "WEBLIB_HCX_CM.H_CLASS_SEARCH.FieldFormula.IScript_ClassSearch"
+
+"""
+format for the term
+2 + two-digit year + semester digit
+spring = 2, summer 1 = 3, summer 2 = 4, fall = 9
+ex.
+fall 2026 = 2269
+spring 2027 = 2272
+"""
+
+TERM = "2272"
 
 
 def get_session_credentials():
@@ -29,7 +40,7 @@ def get_session_credentials():
         browser.close()
 
 
-def get_json(request_context, subject, term="2269"):
+def get_json(request_context, subject, term=TERM):
     if not os.path.isfile(AUTH_FILE):
         raise FileNotFoundError(f"could not find {AUTH_FILE} file")
 
@@ -55,6 +66,7 @@ def get_json(request_context, subject, term="2269"):
         if "application/json" not in content_type:
             raise RuntimeError(
                 "ConnectCarolina session is probably expired. "
+                "Try deleting the auth.json file. "
                 f"Received {content_type} instead of JSON."
             )
 
@@ -244,8 +256,7 @@ def normalize_class(data):
 
 
 if __name__ == "__main__":
-    from supabase_client import save_file_to_db
-    term = "2269"
+    from supabase_client import save_json_to_storage
     subjects = load_subjects()
     raw_classes = []
 
@@ -255,7 +266,8 @@ if __name__ == "__main__":
         request_context = p.request.new_context(storage_state=AUTH_FILE)
 
         try:
-            for subject in subjects:
+            print("Fetching class data.\n")
+            for subject in tqdm(subjects):
                 raw_classes.extend(get_json(request_context, subject))
         finally:
             request_context.dispose()
@@ -265,12 +277,4 @@ if __name__ == "__main__":
         for cls in raw_classes
     ]
 
-    file_path = f"{term}.json"
-    output_directory = "scraped_data"
-    os.makedirs(output_directory, exist_ok=True)
-    class_data_path = os.path.join(output_directory, file_path)
-
-    with open(class_data_path, "w", encoding="utf-8") as file:
-        json.dump(classes, file, indent=2)
-
-    save_file_to_db(class_data_path)
+    save_json_to_storage(classes, f"scraped_data/{TERM}.json")
