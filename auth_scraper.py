@@ -4,6 +4,7 @@ from tqdm import tqdm
 import os
 import re
 from subjects import load_subjects
+from datetime import datetime, timezone
 
 AUTH_FILE = "auth.json"
 API_URL = "https://cs.cc.unc.edu/psc/campus/EMPLOYEE/SA/s/" \
@@ -277,4 +278,9 @@ if __name__ == "__main__":
         for cls in raw_classes
     ]
 
-    save_json_to_storage(classes, f"scraped_data/{TERM}.json")
+    data = {
+        "scraped_date": datetime.now(timezone.utc).isoformat(),
+        "classes" : classes,
+    }
+
+    save_json_to_storage(data, f"scraped_data/{TERM}.json")
